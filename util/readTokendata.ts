@@ -7,23 +7,35 @@ class ReadTokendata{
 		let fs = require('fs');
 		let assert = require('assert');
 
-		let aCounter = 0;
+		let aCounter:number = 0;
+		let aLastCounter:number = 0;
 		let aList:{}[] = [];
 		fileNames.forEach ((fileName) =>{
 			const aFileName = this.fPath + fileName;
-			fs.readFile (aFileName, function (err, data){
-				++aCounter;
-				if (null === err){
-					aList.push ({fileName:fileName, content: JSON.parse (data.toString ())});
-				}
-				else{
-					console.log ({err: err});
-				}
-				if (aCounter === fileNames.length){
-					// console.log (JSON.stringify (aList, null, 8));
-					theCompletion (aList);
-				}
-			});
+
+			let aCompletion = (level) =>{
+					return (err, data) => {
+					if (aCounter !== aLastCounter){
+						// console.log ({level:level, aCounter:aCounter});
+						aLastCounter = aCounter;
+					}
+					if (null === err){
+						++aCounter;
+						aList.push ({fileName:fileName, content: JSON.parse (data.toString ())});
+					}
+					else{
+						setTimeout (()=>{
+							fs.readFile (aFileName, aCompletion (level+1));
+						})
+					}
+					if (aCounter === fileNames.length){
+						// console.log (JSON.stringify (aList, null, 8));
+						theCompletion (aList);
+					}
+				};
+			};
+
+			fs.readFile (aFileName, aCompletion (0));
 		});
 	}
 	
@@ -47,20 +59,22 @@ class ReadTokendata{
 			let aFiles: [string] = [''];
 			aFiles.pop ();
 			files.forEach ((fileName:string) => {
-				const kPrefix = "0x"
+				const kPrefix = "0x";
 				const aPrefix = fileName.substr (0, kPrefix.length);
 				if (kPrefix === aPrefix){
 					aFiles.push (fileName);
 				}
 			});
 			console.log ({aFilesLength:aFiles.length});
-			/*
-			this.readAsync (aFiles, function (theResult){
-				console.log ({aListLength: theResult.length});
-			})
-			*/
-			let aResult = this.readSync (aFiles);
-			console.log ({aListLength: aResult.length});
+			if (1){
+				this.readAsync (aFiles, function (theResult){
+					console.log ({mode:"async", aListLength: theResult.length});
+				})
+			}
+			else{
+				let aResult = this.readSync (aFiles);
+				console.log ({mode:"sync", aListLength: aResult.length});
+			}
 		});
 	}
 
