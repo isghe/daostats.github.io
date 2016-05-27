@@ -1,6 +1,7 @@
 ///<reference path='typescript-node-definitions/node.d.ts'/>
 
 let assert = require('assert');
+var BigNumber = require('bignumber.js');
 
 class ReadTokendata{
 	constructor(public helloWorld: string, private fPath:string) { }
@@ -78,7 +79,13 @@ class ReadTokendata{
 		return aList;
 	}
 	private handleResult = (mode:string, theResult)=>{
-		console.log ({mode:mode, aListLength: theResult.length});
+		let sigmaAmount = new BigNumber (0);
+		theResult.forEach ((theElement) => {
+			// assert (type)
+			const aBigNumber = new BigNumber (""+theElement.content.amount)
+			sigmaAmount = sigmaAmount.plus (aBigNumber);
+		});
+		console.log (JSON.stringify ({mode:mode, aListLength: theResult.length, sigmaAmount:sigmaAmount.toString (10)}, null, 8));
 	}
 	private test = (theMode:string)=>{
 		let fs = require('fs');
@@ -108,7 +115,11 @@ class ReadTokendata{
 	}
 
 	public main = () => {
+
 		let aMode = process.argv [2];
+		if ("undefined" == typeof (aMode)){
+			aMode = "sync";
+		}
 		assert (("async" === aMode) || ("sync" === aMode));
 		this.test (aMode);
 	}
