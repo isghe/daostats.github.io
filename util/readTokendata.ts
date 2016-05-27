@@ -2,7 +2,7 @@ declare function require(module:string);
 
 class ReadTokendata{
 	constructor(public helloWorld: string, private fPath:string) { }
-	
+
 	private readAsync= (fileNames:[string], theCompletion)=>{
 		let fs = require('fs');
 		let assert = require('assert');
@@ -10,13 +10,14 @@ class ReadTokendata{
 		let aCounter:number = 0;
 		let aLastCounter:number = 0;
 		let aList:{}[] = [];
+		let aLog = {};
 		fileNames.forEach ((fileName) =>{
 			const aFileName = this.fPath + fileName;
 
 			let aCompletion = (level) =>{
-					return (err, data) => {
+				return (err, data) => {
 					if (aCounter !== aLastCounter){
-						// console.log ({level:level, aCounter:aCounter});
+						aLog ["" + level] = aCounter;
 						aLastCounter = aCounter;
 					}
 					if (null === err){
@@ -24,12 +25,37 @@ class ReadTokendata{
 						aList.push ({fileName:fileName, content: JSON.parse (data.toString ())});
 					}
 					else{
-						setTimeout (()=>{
-							fs.readFile (aFileName, aCompletion (level+1));
-						})
+						/*
+						{ Error: ENFILE: file table overflow, open '../tokendata/0x6983eafdc105a990cb51c21be463f85d498695dd.js'
+							at Error (native)
+							errno: -23,
+							code: 'ENFILE',
+							syscall: 'open',
+							path: '../tokendata/0x6983eafdc105a990cb51c21be463f85d498695dd.js'
+						}
+
+						{ Error: EMFILE: too many open files, open '../tokendata/0x6dc635d6bebc50eb4e2639d964e0aabf959ea9f4.js'
+							at Error (native)
+							errno: -24,
+							code: 'EMFILE',
+							syscall: 'open',
+							path: '../tokendata/0x6dc635d6bebc50eb4e2639d964e0aabf959ea9f4.js'
+						}
+						*/
+
+						if ('ENFILE' === err.code || 'EMFILE' === err.code){
+							setTimeout (()=>{
+								fs.readFile (aFileName, aCompletion (level+1));
+							});
+						}
+						else{
+							console.log (err);
+							throw err;
+						}
 					}
 					if (aCounter === fileNames.length){
 						// console.log (JSON.stringify (aList, null, 8));
+						console.log (aLog);
 						theCompletion (aList);
 					}
 				};
@@ -38,7 +64,7 @@ class ReadTokendata{
 			fs.readFile (aFileName, aCompletion (0));
 		});
 	}
-	
+
 	private readSync = (fileNames:[string]) => {
 		let aList:{}[] = [];
 		let fs = require('fs');
@@ -49,8 +75,10 @@ class ReadTokendata{
 		});
 		return aList;
 	}
-	
-	private test = ()=>{
+	private handleResult = (mode:string, theResult)=>{
+		console.log ({mode:mode, aListLength: theResult.length});
+	}
+	private test = (theAsync: boolean)=>{
 		let fs = require('fs');
 		let assert = require('assert');
 		const aPath:string = this.fPath;
@@ -66,20 +94,20 @@ class ReadTokendata{
 				}
 			});
 			console.log ({aFilesLength:aFiles.length});
-			if (1){
-				this.readAsync (aFiles, function (theResult){
-					console.log ({mode:"async", aListLength: theResult.length});
+			if (true === theAsync){
+				this.readAsync (aFiles, (theResult) =>{
+					this.handleResult ("async", theResult);
 				})
 			}
 			else{
 				let aResult = this.readSync (aFiles);
-				console.log ({mode:"sync", aListLength: aResult.length});
+				this.handleResult ("sync", aResult);
 			}
 		});
 	}
 
 	public main = () => {
-		this.test ();
+		this.test (true);
 	}
 };
 
