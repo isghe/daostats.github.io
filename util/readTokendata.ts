@@ -1,11 +1,13 @@
-declare function require(module:string);
+///<reference path='typescript-node-definitions/node.d.ts'/>
+
+let assert = require('assert');
 
 class ReadTokendata{
 	constructor(public helloWorld: string, private fPath:string) { }
 
 	private readAsync= (fileNames:[string], theCompletion)=>{
 		let fs = require('fs');
-		let assert = require('assert');
+
 
 		let aCounter:number = 0;
 		let aLastCounter:number = 0;
@@ -78,9 +80,8 @@ class ReadTokendata{
 	private handleResult = (mode:string, theResult)=>{
 		console.log ({mode:mode, aListLength: theResult.length});
 	}
-	private test = (theAsync: boolean)=>{
+	private test = (theMode:string)=>{
 		let fs = require('fs');
-		let assert = require('assert');
 		const aPath:string = this.fPath;
 		fs.readdir(aPath, (error, files) =>{
 			assert (null ===  error);
@@ -94,20 +95,22 @@ class ReadTokendata{
 				}
 			});
 			console.log ({aFilesLength:aFiles.length});
-			if (true === theAsync){
+			if ('async' === theMode){
 				this.readAsync (aFiles, (theResult) =>{
-					this.handleResult ("async", theResult);
+					this.handleResult (theMode, theResult);
 				})
 			}
 			else{
 				let aResult = this.readSync (aFiles);
-				this.handleResult ("sync", aResult);
+				this.handleResult (theMode, aResult);
 			}
 		});
 	}
 
 	public main = () => {
-		this.test (true);
+		let aMode = process.argv [2];
+		assert (("async" === aMode) || ("sync" === aMode));
+		this.test (aMode);
 	}
 };
 
