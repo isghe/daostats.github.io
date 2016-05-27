@@ -78,16 +78,38 @@ class ReadTokendata{
 		});
 		return aList;
 	}
-	private handleResult = (mode:string, theResult)=>{
+	private handleResult = (mode:string, theResult, theAmount:string)=>{
 		let sigmaAmount = new BigNumber (0);
+		let aLessThan = {};
+		const aMedium = new BigNumber (""+theAmount);
 		theResult.forEach ((theElement) => {
 			// assert (type)
-			const aBigNumber = new BigNumber (""+theElement.content.amount)
+			const aBigNumber = new BigNumber (""+theElement.content.amount);
+
+			const aCompared = aBigNumber.comparedTo (aMedium);
+			if ("undefined" === typeof (aLessThan [aCompared])){
+				aLessThan [aCompared] = {count:0, ratio:null};
+			}
+			++aLessThan [aCompared].count;
 			sigmaAmount = sigmaAmount.plus (aBigNumber);
 		});
-		console.log (JSON.stringify ({mode:mode, aListLength: theResult.length, sigmaAmount:sigmaAmount.toString (10)}, null, 8));
+		aLessThan ["-1"].ratio = aLessThan["-1"].count / theResult.length;
+		aLessThan ["1"].ratio = aLessThan["1"].count / theResult.length;
+		let aPartialAmount = new BigNumber (0);
+		let aTreshold = {};
+		theResult.some ((theElement, theIndex: number):boolean =>{
+			const aBigNumber = new BigNumber (""+theElement.content.amount);
+			aPartialAmount = aPartialAmount.plus (aBigNumber);
+			let ret: boolean = false;
+			if (1 === aPartialAmount.comparedTo (sigmaAmount.dividedBy (2))){
+				aTreshold = {index:theIndex, amount:aPartialAmount.toString (10), referenceAmount:aMedium.toString (10)};
+				ret = true;
+			}
+			return ret;
+		});
+		console.log (JSON.stringify ({mode:mode, listLength: theResult.length, sigmaAmount:sigmaAmount.toString (10), treshold:aTreshold, lessThan:aLessThan}, null, 8));
 	}
-	private test = (theMode:string)=>{
+	private test = (theMode:string, theAmount:string)=>{
 		let fs = require('fs');
 		const aPath:string = this.fPath;
 		fs.readdir(aPath, (error, files) =>{
@@ -101,15 +123,15 @@ class ReadTokendata{
 					aFiles.push (fileName);
 				}
 			});
-			console.log ({aFilesLength:aFiles.length});
+			// console.log ({aFilesLength:aFiles.length});
 			if ('async' === theMode){
 				this.readAsync (aFiles, (theResult) =>{
-					this.handleResult (theMode, theResult);
+					this.handleResult (theMode, theResult, theAmount);
 				})
 			}
 			else{
 				let aResult = this.readSync (aFiles);
-				this.handleResult (theMode, aResult);
+				this.handleResult (theMode, aResult, theAmount);
 			}
 		});
 	}
@@ -120,8 +142,12 @@ class ReadTokendata{
 		if ("undefined" == typeof (aMode)){
 			aMode = "sync";
 		}
+		let aAmount:string = process.argv [3];
+		if ("undefined" == typeof (aAmount)){
+			aAmount = "225343873517786561343";
+		}
 		assert (("async" === aMode) || ("sync" === aMode));
-		this.test (aMode);
+		this.test (aMode, aAmount);
 	}
 };
 
