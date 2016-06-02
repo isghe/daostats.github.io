@@ -7,13 +7,13 @@
 "desc": "Original intent, non-interventionist curator.  Split to restore nonjudgmental role of curator.",
 "history": [
 [
-1603930,
+1621404,
 1,
-0
+102805
 ]
 ],
 "newCurator": 1,
-"nope": 455430207046420689655,
+"nope": 1028054129500777926619,
 "passed": null,
 "propID": 6,
 "propdeposit": 0.0,

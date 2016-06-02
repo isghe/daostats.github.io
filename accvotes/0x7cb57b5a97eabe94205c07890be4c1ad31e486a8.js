@@ -1,0 +1,32 @@
+[
+ [
+  17,
+  1,
+  "0x1cb1616459f83ceb9adff5e3d341cdc3fbee9385a6c179a38ee32afdf4268072",
+  2
+ ],
+ [
+  11,
+  0,
+  "0xa89229f8f74130286450a044f8dbfb3e1095ca038628107af6b77c112f728b1c",
+  22
+ ],
+ [
+  5,
+  0,
+  "0x7c969e289bba7b0e0dff69243b47cc1a678a3f70c6e454e85bba5220234d7ddf",
+  0
+ ],
+ [
+  2,
+  0,
+  "0x9c0cb8eef61eaa3143bbda636c829825c0d4fd9371d83a3eedefbcf0d877fa64",
+  0
+ ],
+ [
+  1,
+  0,
+  "0xc0ee8cdb68d3eef5cb0ecabffc497281192511d3bda7091e9884507144861fee",
+  1
+ ]
+]

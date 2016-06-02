@@ -1,4 +1,5 @@
 <html>
+
 <head>
 <meta charset="utf-8">
 
@@ -17,6 +18,28 @@
 
 <script src="datahelper.js"></script>
 <script src="graph.js"></script>
+<script src="markdown.min.js"></script>
+
+<style>
+#miniDesc{
+  overflow:hidden;
+  white-space:nowrap;
+  max-width: 105%;
+}
+
+.miniDescFade{
+position:relative;
+}
+.miniDescFade:before {
+  content:'';
+  width:15%;
+  height:100%;    
+  position:absolute;
+  left:85%;
+  top:0;
+  background:linear-gradient(to left, rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%);
+}
+</style>
 
 
 </head>
@@ -75,16 +98,25 @@
       <br />
         See below for more information</div> 
 
-    <h3>Proposal ID: <small>
-        <span id="proposal-js"></span>
-        <span id="statP" class="label label-success" style="display:none;">Passed with <span class="majority"/>
-        </span></span>
-        <span id="statF" class="label label-danger" style="display:none;">Failed with <span class="majority"/>
-        </span></span>
-        <span id="statV" class="label label-info" style="display:none;">Currently open</span>
-        <span id="statT" class="label label-warning" style="display:none;">Ready to be tallied</span>
-      </small>
-    </h3> 
+    <div class="row">
+
+    <div class="col-md-6">
+      <h3>Proposal ID: <small>
+          <span id="proposal-js"></span>
+          <span id="statP" class="label label-success" style="display:none;">Passed with <span class="majority"/>
+          </span></span>
+          <span id="statF" class="label label-danger" style="display:none;">Failed with <span class="majority"/>
+          </span></span>
+          <span id="statV" class="label label-info" style="display:none;">Currently voting</span>
+          <span id="statT" class="label label-warning" style="display:none;">Ready to be tallied</span>
+        </small>
+      </h3> 
+    </div>
+    <div class="col-md-6">
+      <br /><h4><span id="miniDesc" class="pull-right" >No Description</span></h4>
+    </div>
+    </div>
+    <hr style="margin:5px;"/>
     <div id="extraInfo" class="collapse">
     <div class="row">
 
@@ -103,11 +135,10 @@
       </h4>
 
       <h4>
-        <span id="recipientMode">New Curator: <small>
+        <span id="recipientMode">New Curator:</span> <small>
             <a class="hexLink" id="recipient-js">
             </a>
           </small>
-        </span>
         </h4>
     </div>
     <div class="col-md-6">
@@ -116,8 +147,8 @@
     <h4>Deposit: <small><span id="deposit-js"></span></h4></small>
     </div>
     </div><!-- row -->
-<h4> Votes cast: <small>
-                <span id="voteCap"/></span>
+<h4> Voting result: <small>
+                <span id="voteCapYay" data-toggle="tooltip"></span>, <span id="voteCapNay" data-toggle="tooltip"></></span>
             </small>
             <div class="progress">
               <div id="voteYay" class="progress-bar progress-bar-success" style="width: 0%">
@@ -129,7 +160,7 @@
               <div data-toggle="tooltip" title="50% Marker" style="width: 1px; height: 20px; position: absolute; background: black; right: 50%;">
   </div>
             </div></h4>
-            <h4>Turnout: <span id="turnout"></span>
+            <h4>Turnout: <span id="turnout" data-toggle="tooltip"></span>
             <span class="pull-right">Quorum: <span id="quorumText"></span></span>
             <div class="progress quorum">
               <div id="totalVotes" class="progress-bar" style="width: 0%">
@@ -150,10 +181,14 @@
     <div id="pages1" class="tab-content">
     <div id="descpage" class="tab-pane active">
     
+    <div id="descDisplay" class="btn-group" style="display:none;" role="group" aria-label="Rendering">
+      <button id="buttonPlain" type="button" class="btn btn-default">Plain text</button>
+      <button id="buttonMarkdown" type="button" class="btn btn-default">Markdown</button>
+    </div>
     
             
               <div id="descText" class="panel-body">
-
+                No Description
               </div>
           </div>
           
@@ -238,6 +273,8 @@ var params = window.location.hash.substring(1).split(",");
 var propid = parseInt(params[0]);
 var tabParam = params[1];
 
+var plainText;
+
 if(propid % 1 == 0)
 {
   applyData({proposal: propid});
@@ -309,40 +346,72 @@ if(propid % 1 == 0)
   
     console.log(status);
     
-    var recipientMode = "New Service Provider: ";
-    if(data["newCurator"]) recipientMode = "Recipient: ";
+
+    if(data["newCurator"]==0) $("#recipientMode").text("Recipient: ");
     applyData({amount: baseToETH2(data["amount"]), 
           creator: data["creator"],
           recipient: data["recipient"],
           txhash: data["txhash"],
           deposit: baseToETH2(data["propdeposit"], "eth")});
-
-    //$("#deposit-js").text(baseToEth2(data["amount"], "eth"));
     
     if(data["newCurator"]){
       $("#newSPAlert").collapse("show");
     }
     
-    $("#descText").text(data["desc"]);
+    plainText = data["desc"];
     
-    
+    if(plainText){
+      $("#descText").text(plainText);
+      
+      $("#descDisplay").removeAttr("style");
+      $("#buttonPlain").on("click", function(){
+        $("#descText").text(plainText);
+      });
+      $("#buttonMarkdown").on("click", function(){
+        $("#descText").html(markdown.toHTML(plainText).replace(/(?:\\n)/g, '<br />'));
+      });
+      
+      
+      var miniDesc = plainText.slice(0, 80);
+      miniDesc = miniDesc.split("  ")[0];
+      miniDesc = miniDesc.split("\\n")[0];
+      
+      $("#miniDesc").text(miniDesc);
+      
+      var width = ( 100 * parseFloat($('#miniDesc').css('width')) / parseFloat($('#miniDesc').parent().css('width')) );
+      console.log(width);
+      
+      if(miniDesc.length >= 80 || width > 100) $('#miniDesc').addClass("miniDescFade");
+
+
+      
+      
+    }
     
     
     var yay = data["yes"];
     var nay = data["nope"];
     var total = yay + nay;
     
+    var yayStr = Math.round(yay * (1e-16)).toLocaleString();
+    var nayStr = Math.round(nay * (1e-16)).toLocaleString();
+    var totalStr = Math.round(total * (1e-16)).toLocaleString();
+    
     
     
     if(total > 0){
       $("#voteYay").css("width", 100*yay/total + "%");
       $("#voteNay").css("width", 100*nay/total + "%");
-      $("#voteCap").text(formatFloat(100*yay/total) + "% Yes, " + formatFloat(100*nay/total) + "% No");
+      $("#voteCapYay").text(formatFloat(100*yay/total) + "% Yes")
+                      .prop("title", yayStr + " DAO");
+      $("#voteCapNay").text(formatFloat(100*nay/total) + "% No")
+                      .prop("title", nayStr + " DAO");
     }
     else $("#voteCap").text("No votes");
     
     var turnout = total/totalVol;
-    $("#turnout").text(formatFloat(100*turnout) + "%");
+    $("#turnout").text(formatFloat(100*turnout) + "%")
+                 .prop("title", totalStr + " DAO");
     var quorum = quorumPc(data["amount"], quorumDivisor);
     if(data["newCurator"]) quorum = (5+1/3)*0.1;
     
@@ -420,10 +489,22 @@ if(propid % 1 == 0)
       var yesData = new Array(graphLog.length);
       var noData = new Array(graphLog.length);
       for(var i=0; i<graphLog.length; i++){
-      var blockTime = blockToTime(graphLog[i][0]);
-        yesData[i] = {xNum: graphLog[i][0], xTime: blockTime, y: graphLog[i][1]/totalVolUnit};
-        noData[i] = {xNum: graphLog[i][0], xTime: blockTime, y: graphLog[i][2]/totalVolUnit};
+        var blockTime = blockToTime(graphLog[i][0]);
+        var yesFac = graphLog[i][1]/totalVolUnit;
+        var noFac = graphLog[i][2]/totalVolUnit;
+        yesData[i] = {xNum: graphLog[i][0], xTime: blockTime, y: yesFac};
+        noData[i] = {xNum: graphLog[i][0], xTime: blockTime, y: noFac};
       }
+      
+      var lastY = yesData.slice(-1)[0].y;
+      var lastN = noData.slice(-1)[0].y;
+      
+      var maxFac = Math.max(yesData.slice(-1)[0].y, noData.slice(-1)[0].y);
+      
+      var lastBlock = yesData.slice(-1)[0].xNum;
+      
+      yesData.push({xNum: lastBlock, xTime: new Date, y: lastY})
+      noData.push({xNum: lastBlock, xTime: new Date, y: lastN})
       
       var yesLine = genLineDict(yesData, "Yes");
       yesLine.legend = {toggle: false};
@@ -435,8 +516,8 @@ if(propid % 1 == 0)
       
       var drawGraph = function(){
       new plotGraph("graphBox", [yesLine, noLine], [0], "Block", ["Votes (Percent)"], function(n){
-      return n*100 + "%";
-    }, {button: {text: "Show UTC time",
+      return Math.round(n*10000)/100 + "%";
+    }, {button: [{text: "Show UTC time",
            enable: function(){
             this.changeTickFormat(
               function(){return [this.xScaleTime, this.xScaleTime2];},
@@ -448,6 +529,10 @@ if(propid % 1 == 0)
                   .tickFormat(d3.time.format('%b %d'));
               }, "xTime", 180, "Time");}
                     , disable: function(){this.changeTickFormat(undefined, undefined, "xNum", 100, "Block");}},
+                 {text: "Scale Y axis",
+           enable: function(){
+            this.y.domain([0, maxFac * 1.02]); this.updateAxes(); this.rebrush();},
+           disable: function(){this.y.domain([0, 1]); this.updateAxes();  this.rebrush();}}],
       type: "dual",
       blockDomain: [startBlock, endBlock],
       timeDomain: [startTime, endTime],
