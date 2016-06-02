@@ -83,10 +83,9 @@ class ReadTokendata{
 		let aLessThan = {};
 		const aMedium = new BigNumber (""+theAmount);
 		theResult.forEach ((theElement) => {
-			// assert (type)
 			const aBigNumber = new BigNumber (""+theElement.content.amount);
 
-			const aCompared = aBigNumber.comparedTo (aMedium);
+			const aCompared:number = aBigNumber.comparedTo (aMedium);
 			if ("undefined" === typeof (aLessThan [aCompared])){
 				aLessThan [aCompared] = {count:0, ratio:null};
 			}
@@ -102,7 +101,14 @@ class ReadTokendata{
 			aPartialAmount = aPartialAmount.plus (aBigNumber);
 			let ret: boolean = false;
 			if (1 === aPartialAmount.comparedTo (sigmaAmount.dividedBy (2))){
-				aTreshold = {index:theIndex, amount:aPartialAmount.toString (10), referenceAmount:aMedium.toString (10)};
+				aTreshold = {
+					index:{
+						absolute:theIndex,
+						ratio:theIndex/theResult.length
+					},
+					amount:aPartialAmount.toString (10),
+					referenceAmount:aMedium.toString (10)
+				};
 				ret = true;
 			}
 			return ret;
