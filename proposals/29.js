@@ -5,14 +5,30 @@
 "creator": "0xd68ba7734753e2ee54103116323aba2d94c78dc5",
 "deadline": 1465340102,
 "desc": "",
-"history": [],
+"history": [
+[
+1638824,
+100000,
+0
+],
+[
+1639859,
+1256035,
+4306
+],
+[
+1640759,
+1275842,
+4306
+]
+],
 "newCurator": 1,
-"nope": 0,
+"nope": 43069480376510446074,
 "passed": null,
 "propID": 29,
 "propdeposit": 0.0,
 "qDivisor": null,
 "recipient": "0xd68ba7734753e2ee54103116323aba2d94c78dc5",
 "txhash": "0xd8deb557fac2276e0109c7bb03f07ecef60381b238f0f756797f739f5b679531",
-"yes": 0
+"yes": 12758425106200000000000
 }
