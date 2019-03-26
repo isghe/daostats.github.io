@@ -6,7 +6,7 @@ var BigNumber = require('bignumber.js');
 class ReadTokendata{
 	constructor(public helloWorld: string, private fPath:string) { }
 
-	private readAsync= (fileNames:[string], theCompletion)=>{
+	private readAsync= (fileNames:string[], theCompletion)=>{
 		let fs = require('fs');
 
 
@@ -68,7 +68,7 @@ class ReadTokendata{
 		});
 	}
 
-	private readSync = (fileNames:[string]) => {
+	private readSync = (fileNames:string[]) => {
 		let aList:{}[] = [];
 		let fs = require('fs');
 		fileNames.forEach ((fileName) =>{
@@ -115,12 +115,39 @@ class ReadTokendata{
 		});
 		console.log (JSON.stringify ({mode:mode, listLength: theResult.length, sigmaAmount:sigmaAmount.toString (10), treshold:aTreshold, lessThan:aLessThan}, null, 8));
 	}
-	private test = (theMode:string, theAmount:string)=>{
+	private testOld = (theMode:string, theAmount:string)=>{
 		let fs = require('fs');
 		const aPath:string = this.fPath;
 		fs.readdir(aPath, (error, files) =>{
 			assert (null ===  error);
 			let aFiles: [string] = [''];
+			aFiles.pop ();
+			files.forEach ((fileName:string) => {
+				const kPrefix = "0x";
+				const aPrefix = fileName.substr (0, kPrefix.length);
+				if (kPrefix === aPrefix){
+					aFiles.push (fileName);
+				}
+			});
+			// console.log ({aFilesLength:aFiles.length});
+			if ('async' === theMode){
+				this.readAsync (aFiles, (theResult) =>{
+					this.handleResult (theMode, theResult, theAmount);
+				})
+			}
+			else{
+				let aResult = this.readSync (aFiles);
+				this.handleResult (theMode, aResult, theAmount);
+			}
+		});
+	}
+
+	private test = (theMode:string, theAmount:string)=>{
+		let fs = require('fs');
+		const aPath:string = this.fPath;
+		fs.readdir(aPath, (error, files) =>{
+			assert (null ===  error);
+			let aFiles: string[] = [];
 			aFiles.pop ();
 			files.forEach ((fileName:string) => {
 				const kPrefix = "0x";
